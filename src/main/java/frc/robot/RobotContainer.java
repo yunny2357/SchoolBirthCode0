@@ -4,11 +4,21 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Percent;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.drivetain.Drivetrain;
 
 public class RobotContainer {
+  public Drivetrain drivetrain = Drivetrain.getInstance();
+  public CommandXboxController controller = new CommandXboxController(0);
   public RobotContainer() {
+    drivetrain.setDefaultCommand(drivetrain.drive(
+      () -> Percent.of(controller.getLeftY()*100),
+      () -> Percent.of(controller.getRightX()*100)
+    ));
     configureBindings();
   }
 

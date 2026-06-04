@@ -4,68 +4,23 @@
 
 package frc.robot;
 
-import com.revrobotics.PersistMode;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import com.studica.frc.AHRS;
-import com.studica.frc.AHRS.NavXComType;
-
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 public class Robot extends TimedRobot {
+  private Command m_autonomousCommand;
 
-  public SparkMax RightMotor,LeftMotor;
-  public RelativeEncoder RighRelativeEncoder,LeftRelativeEncoder;
-  
-  public SparkMaxConfig RightConfig , LeftConfig;
-
-  public XboxController controller = new XboxController(0);
-
-  public AHRS gyro;
+  private final RobotContainer m_robotContainer;
 
   public Robot() {
-    RightMotor = new SparkMax(12, MotorType.kBrushless);
-    LeftMotor = new SparkMax(11, MotorType.kBrushless);
-    RighRelativeEncoder = RightMotor.getEncoder();
-    LeftRelativeEncoder = LeftMotor.getEncoder();
-    gyro = new AHRS(NavXComType.kMXP_SPI);
+    m_robotContainer = new RobotContainer();
     
-    LeftConfig = new SparkMaxConfig();
-    RightConfig = new SparkMaxConfig();
-
-    LeftConfig
-      .idleMode(IdleMode.kBrake)
-      .inverted(false)
-      .voltageCompensation(12)
-      .smartCurrentLimit(40);
-    
-    LeftConfig.encoder
-      .positionConversionFactor(1/10.71)
-      .velocityConversionFactor(1/10.71/60);
-
-    RightConfig
-      .idleMode(IdleMode.kBrake)
-      .inverted(true)
-      .voltageCompensation(12)
-      .smartCurrentLimit(40);
-    
-    RightConfig.encoder
-      .positionConversionFactor(1/10.71)
-      .velocityConversionFactor(1/10.71/60);
-    
-    LeftMotor.configure(LeftConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-    RightMotor.configure(RightConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
   @Override
   public void robotPeriodic() {
+    CommandScheduler.getInstance().run();
   }
 
   @Override
@@ -79,6 +34,11 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousInit() {
+    m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+
+    if (m_autonomousCommand != null) {
+      CommandScheduler.getInstance().schedule(m_autonomousCommand);
+    }
   }
 
   @Override
@@ -89,20 +49,20 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
-    
+    if (m_autonomousCommand != null) {
+      m_autonomousCommand.cancel();
+    }
   }
 
   @Override
-  public void teleopPeriodic() {
-    LeftMotor.set(controller.getLeftY());
-    RightMotor.set(controller.getRightY());
-  }
+  public void teleopPeriodic() {}
 
   @Override
   public void teleopExit() {}
 
   @Override
   public void testInit() {
+    CommandScheduler.getInstance().cancelAll();
   }
 
   @Override
